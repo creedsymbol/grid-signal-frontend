@@ -309,14 +309,17 @@ export function buildMockCostTrend(currentMonthlyCost) {
 }
 
 let lastMockScenarioIndex = -1;
+let mockHeadlineScenarioShown = false;
 
 // scenarios[0] is the headline PPAC scenario (+₹40,200) the product's whole
-// narrative is built around — mirrors the live API's pickScenario(): a fresh
-// simulate from a clean baseline always shows it first, a repeat click picks
-// randomly among the rest.
-export function pickMockScenario(forceHeadline = false) {
+// narrative is built around — mirrors the live API's pickScenario(): the
+// first simulate click in this browser session always shows it, every
+// click after that (including after a reset) picks randomly among all
+// scenarios, avoiding an immediate repeat.
+export function pickMockScenario() {
   const scenarios = MOCK.scenarios;
-  if (forceHeadline) {
+  if (!mockHeadlineScenarioShown) {
+    mockHeadlineScenarioShown = true;
     lastMockScenarioIndex = 0;
     return scenarios[0];
   }
