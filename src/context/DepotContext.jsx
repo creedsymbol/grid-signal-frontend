@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { api, MOCK } from "../lib/api";
+import { api, MOCK, pickMockScenario } from "../lib/api";
 
 const DepotContext = createContext(null);
 
@@ -68,13 +68,21 @@ export function DepotProvider({ children }) {
     }
 
     const now = new Date();
+    const scenario = pickMockScenario();
+    const difference = scenario.costComparison.difference;
     const alert = {
-      ...MOCK.simulatedAlert,
       id: `mock-${now.getTime()}`,
       date: now.toISOString().slice(0, 10),
+      title: scenario.title,
+      type: scenario.type,
+      headline: scenario.title,
+      description: scenario.description,
+      impactAmount: difference,
+      impactDirection: difference > 0 ? "increase" : difference < 0 ? "decrease" : "no change",
+      currency: "INR",
     };
     setDepot((prev) => withTimestamp({ ...prev, status: "active alert" }));
-    setCostComparison(withTimestamp(MOCK.costAfterAlert));
+    setCostComparison(withTimestamp(scenario.costComparison));
     setChangeHistory((prev) => [...prev, alert]);
   }, []);
 

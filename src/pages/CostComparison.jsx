@@ -40,6 +40,7 @@ function BreakdownRow({ item }) {
 export default function CostComparison() {
   const { costComparison } = useDepot();
   const hasChange = costComparison.difference !== 0;
+  const trendDirection = costComparison.difference > 0 ? "up" : costComparison.difference < 0 ? "down" : "flat";
 
   const chartData = [
     { name: "Last month", amount: costComparison.oldMonthlyCost },
@@ -59,7 +60,7 @@ export default function CostComparison() {
               value={formatINR(costComparison.newMonthlyCost)}
               deltaSlot={
                 hasChange ? (
-                  <TrendDelta direction="up">
+                  <TrendDelta direction={trendDirection}>
                     {formatSignedINR(costComparison.difference)} vs {formatINR(costComparison.oldMonthlyCost)} last month
                   </TrendDelta>
                 ) : (

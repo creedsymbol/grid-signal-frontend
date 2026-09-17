@@ -25,6 +25,8 @@ function ProfileStat({ icon: Icon, label, value }) {
 export default function Overview() {
   const { depot, costComparison, simulateChange, resetToNormal, loading } = useDepot();
   const hasActiveAlert = depot.status === "active alert";
+  const isGoodNews = hasActiveAlert && costComparison.difference < 0;
+  const trendDirection = costComparison.difference > 0 ? "up" : costComparison.difference < 0 ? "down" : "flat";
 
   return (
     <div>
@@ -43,7 +45,9 @@ export default function Overview() {
       </div>
 
       <Card
-        className={`mb-6 p-6 sm:p-8 ${hasActiveAlert ? "border-amber-200 ring-1 ring-amber-100" : ""}`}
+        className={`mb-6 p-6 sm:p-8 ${
+          hasActiveAlert ? (isGoodNews ? "border-emerald-200 ring-1 ring-emerald-100" : "border-amber-200 ring-1 ring-amber-100") : ""
+        }`}
       >
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <HeroMetric
@@ -52,7 +56,7 @@ export default function Overview() {
             value={formatINR(costComparison.newMonthlyCost)}
             deltaSlot={
               hasActiveAlert ? (
-                <TrendDelta direction="up">
+                <TrendDelta direction={trendDirection}>
                   {formatSignedINR(costComparison.difference)} vs last month
                 </TrendDelta>
               ) : (
@@ -75,8 +79,10 @@ export default function Overview() {
         </div>
 
         {hasActiveAlert && (
-          <div className="mt-6 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">
-            A new tariff change has been detected on your TPDDL connection.{" "}
+          <div className={`mt-6 rounded-2xl p-4 text-sm ${isGoodNews ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"}`}>
+            {isGoodNews
+              ? "A new tariff change has been detected on your TPDDL connection — and it lowers your expected cost."
+              : "A new tariff change has been detected on your TPDDL connection."}{" "}
             <Link to="/alert" className="font-semibold underline underline-offset-2">
               View the full alert
             </Link>

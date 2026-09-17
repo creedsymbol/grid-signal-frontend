@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { AlertTriangle, ArrowRight, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import PageHeader from "../components/PageHeader";
@@ -10,6 +10,7 @@ export default function AlertPage() {
   const { depot, changeHistory, resetToNormal, loading } = useDepot();
   const hasActiveAlert = depot.status === "active alert";
   const latestAlert = hasActiveAlert ? [...changeHistory].reverse()[0] : null;
+  const isGoodNews = latestAlert?.impactAmount != null && latestAlert.impactAmount < 0;
 
   if (!hasActiveAlert || !latestAlert) {
     return (
@@ -36,13 +37,17 @@ export default function AlertPage() {
     <div>
       <PageHeader title="Alert" subtitle="Tariff changes affecting your depot" />
 
-      <Card className="border-amber-200 p-6 ring-1 ring-amber-100 sm:p-8">
+      <Card className={`p-6 ring-1 sm:p-8 ${isGoodNews ? "border-emerald-200 ring-emerald-100" : "border-amber-200 ring-amber-100"}`}>
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-            <AlertTriangle size={22} />
+          <div
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+              isGoodNews ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            {isGoodNews ? <Sparkles size={22} /> : <AlertTriangle size={22} />}
           </div>
           <div>
-            <p className="text-sm font-medium text-amber-700">
+            <p className={`text-sm font-medium ${isGoodNews ? "text-emerald-700" : "text-amber-700"}`}>
               {(latestAlert.type ?? "Tariff change").toUpperCase()}
             </p>
             <h2 className="mt-1 text-xl font-bold text-indigo-950">
@@ -54,7 +59,11 @@ export default function AlertPage() {
         <p className="mt-5 leading-relaxed text-slate-600">{latestAlert.description}</p>
 
         {latestAlert.impactAmount != null && (
-          <div className="mt-5 inline-flex items-center rounded-xl bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">
+          <div
+            className={`mt-5 inline-flex items-center rounded-xl px-4 py-2 text-sm font-semibold ${
+              isGoodNews ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+            }`}
+          >
             {formatSignedINR(latestAlert.impactAmount)} / month impact
           </div>
         )}

@@ -3,6 +3,7 @@ export const API_BASE = "https://grid-signal-backend-production.up.railway.app";
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
+    cache: "no-store",
     ...options,
   });
   if (!res.ok) {
@@ -68,35 +69,185 @@ export const MOCK = {
     ],
   },
 
-  costAfterAlert: {
-    oldMonthlyCost: 245000,
-    newMonthlyCost: 285200,
-    difference: 40200,
-    currency: "INR",
-    breakdown: [
-      {
-        component: "Energy charge",
-        oldAmount: 196000,
-        newAmount: 218100,
-        change: 22100,
-        note: "TPDDL revised the per-unit energy rate for commercial connections",
+  // Scenarios a simulated tariff change can pick from, mirroring the live
+  // API's own scenario set exactly so mock and live behave identically.
+  scenarios: [
+    {
+      title: "TPDDL PPAC Revised for October 2026",
+      type: "PPAC revision",
+      description:
+        "TPDDL has revised the Power Purchase Adjustment Cost (PPAC) component of its commercial tariff, effective the October 2026 billing cycle. Combined with an energy charge revision, this is expected to raise your depot's monthly electricity cost — before the bill arrives.",
+      costComparison: {
+        oldMonthlyCost: 245000,
+        newMonthlyCost: 285200,
+        difference: 40200,
+        currency: "INR",
+        breakdown: [
+          {
+            component: "Energy charge",
+            oldAmount: 196000,
+            newAmount: 218100,
+            change: 22100,
+            note: "TPDDL revised the per-unit energy rate for commercial connections",
+          },
+          {
+            component: "Demand charge",
+            oldAmount: 33000,
+            newAmount: 33000,
+            change: 0,
+            note: "Unchanged — sanctioned load has not been revised",
+          },
+          {
+            component: "PPAC (Power Purchase Adjustment Cost)",
+            oldAmount: 16000,
+            newAmount: 34100,
+            change: 18100,
+            note: "PPAC revised upward for the next billing cycle",
+          },
+        ],
       },
-      {
-        component: "Demand charge",
-        oldAmount: 33000,
-        newAmount: 33000,
-        change: 0,
-        note: "Unchanged — sanctioned load has not been revised",
+    },
+    {
+      title: "TPDDL Revises Night-Time (Off-Peak) Tariff",
+      type: "Time-of-Day tariff revision",
+      description:
+        "TPDDL has revised its Time-of-Day tariff structure, raising the off-peak (11 PM–6 AM) unit rate for commercial connections. Since your fleet charges overnight, this affects the bulk of your energy consumption.",
+      costComparison: {
+        oldMonthlyCost: 245000,
+        newMonthlyCost: 260500,
+        difference: 15500,
+        currency: "INR",
+        breakdown: [
+          {
+            component: "Energy charge",
+            oldAmount: 196000,
+            newAmount: 211500,
+            change: 15500,
+            note: "Off-peak (night) unit rate revised upward",
+          },
+          {
+            component: "Demand charge",
+            oldAmount: 33000,
+            newAmount: 33000,
+            change: 0,
+            note: "Unchanged — sanctioned load has not been revised",
+          },
+          {
+            component: "PPAC (Power Purchase Adjustment Cost)",
+            oldAmount: 16000,
+            newAmount: 16000,
+            change: 0,
+            note: "No revision in effect",
+          },
+        ],
       },
-      {
-        component: "PPAC (Power Purchase Adjustment Cost)",
-        oldAmount: 16000,
-        newAmount: 34100,
-        change: 18100,
-        note: "PPAC revised upward for the next billing cycle",
+    },
+    {
+      title: "TPDDL Revises Demand Charges for Commercial Connections",
+      type: "Demand charge revision",
+      description:
+        "TPDDL has increased the per-kW demand charge for commercial connections under its latest tariff order. Your sanctioned load of 120 kW means this adds directly to your fixed monthly cost, regardless of usage.",
+      costComparison: {
+        oldMonthlyCost: 245000,
+        newMonthlyCost: 254800,
+        difference: 9800,
+        currency: "INR",
+        breakdown: [
+          {
+            component: "Energy charge",
+            oldAmount: 196000,
+            newAmount: 196000,
+            change: 0,
+            note: "No revision in effect",
+          },
+          {
+            component: "Demand charge",
+            oldAmount: 33000,
+            newAmount: 42800,
+            change: 9800,
+            note: "Per-kW demand charge revised upward for commercial connections",
+          },
+          {
+            component: "PPAC (Power Purchase Adjustment Cost)",
+            oldAmount: 16000,
+            newAmount: 16000,
+            change: 0,
+            note: "No revision in effect",
+          },
+        ],
       },
-    ],
-  },
+    },
+    {
+      title: "DERC Revises Cross-Subsidy Surcharge",
+      type: "Regulatory revision",
+      description:
+        "The Delhi Electricity Regulatory Commission revised the cross-subsidy surcharge applicable to commercial connections in its latest tariff order, adding a small increase across all TPDDL commercial bills.",
+      costComparison: {
+        oldMonthlyCost: 245000,
+        newMonthlyCost: 251400,
+        difference: 6400,
+        currency: "INR",
+        breakdown: [
+          {
+            component: "Energy charge",
+            oldAmount: 196000,
+            newAmount: 202400,
+            change: 6400,
+            note: "Cross-subsidy surcharge revised upward by DERC order",
+          },
+          {
+            component: "Demand charge",
+            oldAmount: 33000,
+            newAmount: 33000,
+            change: 0,
+            note: "Unchanged — sanctioned load has not been revised",
+          },
+          {
+            component: "PPAC (Power Purchase Adjustment Cost)",
+            oldAmount: 16000,
+            newAmount: 16000,
+            change: 0,
+            note: "No revision in effect",
+          },
+        ],
+      },
+    },
+    {
+      title: "TPDDL Introduces Off-Peak EV Charging Incentive",
+      type: "Tariff incentive",
+      description:
+        "TPDDL has introduced a discounted off-peak tariff for registered EV charging connections, effective this billing cycle. Since your fleet charges overnight, this lowers your expected monthly cost.",
+      costComparison: {
+        oldMonthlyCost: 245000,
+        newMonthlyCost: 233000,
+        difference: -12000,
+        currency: "INR",
+        breakdown: [
+          {
+            component: "Energy charge",
+            oldAmount: 196000,
+            newAmount: 184000,
+            change: -12000,
+            note: "New off-peak EV charging incentive rate applied",
+          },
+          {
+            component: "Demand charge",
+            oldAmount: 33000,
+            newAmount: 33000,
+            change: 0,
+            note: "Unchanged — sanctioned load has not been revised",
+          },
+          {
+            component: "PPAC (Power Purchase Adjustment Cost)",
+            oldAmount: 16000,
+            newAmount: 16000,
+            change: 0,
+            note: "No revision in effect",
+          },
+        ],
+      },
+    },
+  ],
 
   changeHistory: [
     {
@@ -123,17 +274,6 @@ export const MOCK = {
     },
   ],
 
-  simulatedAlert: {
-    title: "TPDDL PPAC Revised for October 2026",
-    type: "PPAC revision",
-    headline: "TPDDL PPAC Revised for October 2026",
-    description:
-      "TPDDL has revised the Power Purchase Adjustment Cost (PPAC) component of its commercial tariff, effective the October 2026 billing cycle. Combined with an energy charge revision, this is expected to raise your depot's monthly electricity cost by approximately ₹40,200 — before the bill arrives.",
-    impactAmount: 40200,
-    impactDirection: "increase",
-    currency: "INR",
-  },
-
   settings: {
     discom: "TPDDL",
     typicalMonthlyUsageKwh: 45000,
@@ -141,3 +281,18 @@ export const MOCK = {
     vehicleCount: 60,
   },
 };
+
+let lastMockScenarioIndex = -1;
+
+// Picks a random scenario, avoiding an immediate repeat — mirrors the live
+// API's own pickScenario() so mock and live behave the same way.
+export function pickMockScenario() {
+  const scenarios = MOCK.scenarios;
+  if (scenarios.length === 1) return scenarios[0];
+  let index;
+  do {
+    index = Math.floor(Math.random() * scenarios.length);
+  } while (index === lastMockScenarioIndex);
+  lastMockScenarioIndex = index;
+  return scenarios[index];
+}
