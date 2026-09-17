@@ -17,6 +17,7 @@ export const api = {
   simulateChange: () => request("/api/simulate-change", { method: "POST" }),
   resetToNormal: () => request("/api/reset", { method: "POST" }),
   getCostComparison: () => request("/api/cost-comparison"),
+  getCostTrend: () => request("/api/cost-trend"),
   getChangeHistory: () => request("/api/change-history"),
   getSettings: () => request("/api/settings"),
   updateSettings: (patch) =>
@@ -68,6 +69,16 @@ export const MOCK = {
       },
     ],
   },
+
+  // Fixed monthly cost history. The current month is appended dynamically
+  // (see pickMockCostTrend) so the trend chart reacts to simulate/reset.
+  costTrendHistory: [
+    { month: "2026-04", cost: 225000 },
+    { month: "2026-05", cost: 227000 },
+    { month: "2026-06", cost: 245000 },
+    { month: "2026-07", cost: 245000 },
+    { month: "2026-08", cost: 245000 },
+  ],
 
   // Scenarios a simulated tariff change can pick from, mirroring the live
   // API's own scenario set exactly so mock and live behave identically.
@@ -279,8 +290,23 @@ export const MOCK = {
     typicalMonthlyUsageKwh: 45000,
     peakDemandKw: 110,
     vehicleCount: 60,
+    notifyEmail: false,
+    notifyEmailAddress: "",
+    notifySms: false,
+    notifySmsNumber: "",
+    notifyThresholdRupees: 5000,
   },
 };
+
+// Builds the mock cost-trend response, appending the current month computed
+// from whatever cost comparison is active — mirrors the live API's behavior.
+export function buildMockCostTrend(currentMonthlyCost) {
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return {
+    months: [...MOCK.costTrendHistory, { month: currentMonth, cost: currentMonthlyCost }],
+  };
+}
 
 let lastMockScenarioIndex = -1;
 

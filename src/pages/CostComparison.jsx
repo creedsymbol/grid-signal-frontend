@@ -1,10 +1,21 @@
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import Card from "../components/Card";
 import PageHeader from "../components/PageHeader";
 import HeroMetric from "../components/HeroMetric";
 import TrendDelta from "../components/TrendDelta";
 import { useDepot } from "../context/DepotContext";
-import { formatINR, formatSignedINR } from "../lib/format";
+import { formatINR, formatMonthLabel, formatSignedINR } from "../lib/format";
 
 function ChartTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -38,7 +49,7 @@ function BreakdownRow({ item }) {
 }
 
 export default function CostComparison() {
-  const { costComparison } = useDepot();
+  const { costComparison, costTrend } = useDepot();
   const hasChange = costComparison.difference !== 0;
   const trendDirection = costComparison.difference > 0 ? "up" : costComparison.difference < 0 ? "down" : "flat";
 
@@ -46,6 +57,11 @@ export default function CostComparison() {
     { name: "Last month", amount: costComparison.oldMonthlyCost },
     { name: "This month", amount: costComparison.newMonthlyCost },
   ];
+
+  const trendChartData = costTrend.map((m) => ({
+    name: formatMonthLabel(m.month),
+    amount: m.cost,
+  }));
 
   return (
     <div>
@@ -90,6 +106,35 @@ export default function CostComparison() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </Card>
+
+      <Card className="mb-6 p-6 sm:p-8">
+        <p className="mb-4 font-semibold text-indigo-950">Monthly cost trend</p>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={trendChartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+              <CartesianGrid vertical={false} stroke="#eef0f4" />
+              <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 13 }} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+                width={48}
+                domain={["dataMin - 10000", "dataMax + 10000"]}
+              />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#e0e4ea" }} />
+              <Line
+                type="monotone"
+                dataKey="amount"
+                stroke="#4338ca"
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: "#4338ca", strokeWidth: 0 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </Card>
 

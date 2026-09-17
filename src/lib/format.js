@@ -26,3 +26,11 @@ export function formatFullDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
+
+// "2026-04" -> "Apr 2026"
+export function formatMonthLabel(yearMonth) {
+  if (!yearMonth) return "";
+  const [year, month] = yearMonth.split("-");
+  const d = new Date(Number(year), Number(month) - 1, 1);
+  return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+}

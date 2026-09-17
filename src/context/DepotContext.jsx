@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { api, MOCK, pickMockScenario } from "../lib/api";
+import { api, MOCK, pickMockScenario, buildMockCostTrend } from "../lib/api";
 
 const DepotContext = createContext(null);
 
@@ -10,6 +10,7 @@ function withTimestamp(obj) {
 export function DepotProvider({ children }) {
   const [depot, setDepot] = useState(withTimestamp(MOCK.depot));
   const [costComparison, setCostComparison] = useState(withTimestamp(MOCK.costBaseline));
+  const [costTrend, setCostTrend] = useState(buildMockCostTrend(MOCK.costBaseline.newMonthlyCost).months);
   const [changeHistory, setChangeHistory] = useState(MOCK.changeHistory);
   const [settings, setSettings] = useState(MOCK.settings);
   const [loading, setLoading] = useState(true);
@@ -21,15 +22,17 @@ export function DepotProvider({ children }) {
   const loadInitial = useCallback(async () => {
     setLoading(true);
     try {
-      const [depotRes, costRes, historyRes, settingsRes] = await Promise.all([
+      const [depotRes, costRes, trendRes, historyRes, settingsRes] = await Promise.all([
         api.getDepot(),
         api.getCostComparison(),
+        api.getCostTrend(),
         api.getChangeHistory(),
         api.getSettings(),
       ]);
       liveRef.current = true;
       setDepot(depotRes);
       setCostComparison(costRes);
+      setCostTrend(trendRes.months ?? trendRes);
       setChangeHistory(historyRes.events ?? historyRes);
       setSettings(settingsRes);
     } catch (err) {
@@ -37,6 +40,7 @@ export function DepotProvider({ children }) {
       liveRef.current = false;
       setDepot(withTimestamp(MOCK.depot));
       setCostComparison(withTimestamp(MOCK.costBaseline));
+      setCostTrend(buildMockCostTrend(MOCK.costBaseline.newMonthlyCost).months);
       setChangeHistory(MOCK.changeHistory);
       setSettings(MOCK.settings);
     } finally {
@@ -52,13 +56,15 @@ export function DepotProvider({ children }) {
     if (liveRef.current) {
       try {
         await api.simulateChange();
-        const [depotRes, costRes, historyRes] = await Promise.all([
+        const [depotRes, costRes, trendRes, historyRes] = await Promise.all([
           api.getDepot(),
           api.getCostComparison(),
+          api.getCostTrend(),
           api.getChangeHistory(),
         ]);
         setDepot(depotRes);
         setCostComparison(costRes);
+        setCostTrend(trendRes.months ?? trendRes);
         setChangeHistory(historyRes.events ?? historyRes);
         return;
       } catch (err) {
@@ -83,6 +89,7 @@ export function DepotProvider({ children }) {
     };
     setDepot((prev) => withTimestamp({ ...prev, status: "active alert" }));
     setCostComparison(withTimestamp(scenario.costComparison));
+    setCostTrend(buildMockCostTrend(scenario.costComparison.newMonthlyCost).months);
     setChangeHistory((prev) => [...prev, alert]);
   }, []);
 
@@ -90,9 +97,14 @@ export function DepotProvider({ children }) {
     if (liveRef.current) {
       try {
         await api.resetToNormal();
-        const [depotRes, costRes] = await Promise.all([api.getDepot(), api.getCostComparison()]);
+        const [depotRes, costRes, trendRes] = await Promise.all([
+          api.getDepot(),
+          api.getCostComparison(),
+          api.getCostTrend(),
+        ]);
         setDepot(depotRes);
         setCostComparison(costRes);
+        setCostTrend(trendRes.months ?? trendRes);
         return;
       } catch (err) {
         console.warn("GridSignal: reset failed against live API, switching to demo data.", err);
@@ -102,6 +114,7 @@ export function DepotProvider({ children }) {
 
     setDepot((prev) => withTimestamp({ ...prev, status: "no active alert" }));
     setCostComparison(withTimestamp(MOCK.costBaseline));
+    setCostTrend(buildMockCostTrend(MOCK.costBaseline.newMonthlyCost).months);
   }, []);
 
   const updateSettings = useCallback(async (patch) => {
@@ -127,6 +140,7 @@ export function DepotProvider({ children }) {
   const value = {
     depot,
     costComparison,
+    costTrend,
     changeHistory,
     settings,
     loading,
