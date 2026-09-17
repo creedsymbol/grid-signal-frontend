@@ -91,8 +91,8 @@ export default function Settings() {
       setError("Typical monthly usage must be a non-negative number.");
       return;
     }
-    if (typeof form.peakDemandKw !== "number" || form.peakDemandKw < 0) {
-      setError("Peak demand must be a non-negative number.");
+    if (typeof form.sanctionedLoadKw !== "number" || form.sanctionedLoadKw < 0) {
+      setError("Sanctioned load must be a non-negative number.");
       return;
     }
     if (!Number.isInteger(form.vehicleCount) || form.vehicleCount < 0) {
@@ -150,13 +150,13 @@ export default function Settings() {
               />
             </Field>
 
-            <Field label="Peak demand" hint="Measured in kW">
+            <Field label="Sanctioned load" hint="Maximum load TPDDL has sanctioned for this connection, in kW">
               <input
                 type="number"
                 min="0"
                 className={inputClass}
-                value={form.peakDemandKw}
-                onChange={handleChange("peakDemandKw")}
+                value={form.sanctionedLoadKw}
+                onChange={handleChange("sanctionedLoadKw")}
               />
             </Field>
 

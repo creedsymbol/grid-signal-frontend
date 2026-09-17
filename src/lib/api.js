@@ -288,7 +288,7 @@ export const MOCK = {
   settings: {
     discom: "TPDDL",
     typicalMonthlyUsageKwh: 45000,
-    peakDemandKw: 110,
+    sanctionedLoadKw: 120,
     vehicleCount: 60,
     notifyEmail: false,
     notifyEmailAddress: "",
@@ -310,10 +310,16 @@ export function buildMockCostTrend(currentMonthlyCost) {
 
 let lastMockScenarioIndex = -1;
 
-// Picks a random scenario, avoiding an immediate repeat — mirrors the live
-// API's own pickScenario() so mock and live behave the same way.
-export function pickMockScenario() {
+// scenarios[0] is the headline PPAC scenario (+₹40,200) the product's whole
+// narrative is built around — mirrors the live API's pickScenario(): a fresh
+// simulate from a clean baseline always shows it first, a repeat click picks
+// randomly among the rest.
+export function pickMockScenario(forceHeadline = false) {
   const scenarios = MOCK.scenarios;
+  if (forceHeadline) {
+    lastMockScenarioIndex = 0;
+    return scenarios[0];
+  }
   if (scenarios.length === 1) return scenarios[0];
   let index;
   do {

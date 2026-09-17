@@ -74,7 +74,8 @@ export function DepotProvider({ children }) {
     }
 
     const now = new Date();
-    const scenario = pickMockScenario();
+    const forceHeadline = depot.status !== "active alert";
+    const scenario = pickMockScenario(forceHeadline);
     const difference = scenario.costComparison.difference;
     const alert = {
       id: `mock-${now.getTime()}`,
@@ -91,7 +92,7 @@ export function DepotProvider({ children }) {
     setCostComparison(withTimestamp(scenario.costComparison));
     setCostTrend(buildMockCostTrend(scenario.costComparison.newMonthlyCost).months);
     setChangeHistory((prev) => [...prev, alert]);
-  }, []);
+  }, [depot.status]);
 
   const resetToNormal = useCallback(async () => {
     if (liveRef.current) {
